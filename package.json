@@ -1,0 +1,56 @@
+{
+  "name": "zool-stylus",
+  "version": "0.1.0",
+  "description": "A Hapi.js plugin for compiling and serving Stylus stylesheets",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --ui bdd",
+    "start": "node example/server.js"
+  },
+  "author": {
+    "name": "Stuart Plumbley",
+    "email": "stuplum@inkfish.co",
+    "url": "http://stuplum.co.uk"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/stuplum/zool-stylus.git"
+  },
+  "bugs": {
+    "url": "http://github.com/stuplum/zool-stylus/issues"
+  },
+  "keywords": [
+    "hapi",
+    "hapijs",
+    "stylus",
+    "zool"
+  ],
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "hapi": ">=10.0.0"
+  },
+  "dependencies": {
+    "bluebird": "3.2.2",
+    "boom": "^2.8.0",
+    "colors": "1.1.2",
+    "hapi": "16.6.0",
+    "hoek": "^2.3.0",
+    "inert": "3.2.0",
+    "mkdirp": "^0.3.5",
+    "stylus": "0.54.5",
+    "zool-utils": "0.2.0"
+  },
+  "devDependencies": {
+    "chai": "^3.2.0",
+    "commander": "^2.9.0",
+    "glob": "^6.0.4",
+    "mocha": "^1.17.1",
+    "rimraf": "2.5.1",
+    "sinon": "1.17.3",
+    "sinon-chai": "2.8.0",
+    "zool-test-support": "0.1.2"
+  }
+}
