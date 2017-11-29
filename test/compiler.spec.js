@@ -6,7 +6,7 @@ const writeFile = require('fs').writeFileSync;
 describe('zool-stylus: compiler', function () {
 
   const temp = new Temp('zool-stylus-compiler');
-  const compiler = require('../lib/compiler');
+  const compiler = require('../src/compiler');
 
   after(function () {
     temp.cleanUp();

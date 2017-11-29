@@ -26,7 +26,7 @@ describe('zool-stylus: default settings', function () {
         server = new Hapi.Server();
         server.connection({ port: 8000 });
 
-        server.register([{ register: require('../lib/route'), options: { src: temp.path } }], done);
+        server.register([{ register: require('../src/route'), options: { src: temp.path } }], done);
     });
 
     it('should compile a stylus file', function (done) {

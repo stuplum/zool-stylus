@@ -22,7 +22,7 @@ describe('zool-stylus: outputStyle', function () {
         server = new Hapi.Server();
         server.connection({ port: 8000 });
 
-        server.register([{ register: require('../lib/route'), options: { src: temp.path, compress: false } }], done);
+        server.register([{ register: require('../src/route'), options: { src: temp.path, compress: false } }], done);
     });
 
     it('should compile from a configured output style', function (done) {
