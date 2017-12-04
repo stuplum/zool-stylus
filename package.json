@@ -4,7 +4,7 @@
   "description": "A Hapi.js plugin for compiling and serving Stylus stylesheets",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --ui bdd",
+    "test": "mocha --ui bdd --reporter spec --require test/support",
     "start": "node example/server.js"
   },
   "author": {

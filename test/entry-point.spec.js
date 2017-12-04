@@ -1,56 +1,45 @@
-'use strict';
+'use strict'
 
-const Hapi = require('hapi');
+const {expect, Workspace} = require('./support')
+const Hapi = require('hapi')
 
-describe('zool-stylus: entryPoint', function () {
+const route = require('../src/route')
 
-    const temp = new Temp('zool-stylus-route');
+describe('zool-stylus: entryPoint', () => {
+  const workspace = Workspace.create('zool-stylus-route', '/public/css')
+  let server
 
-    let server;
+  before(async () => {
+    workspace.addSrcFiles([
+      { name: 'custom-entry/my-entry.styl', content: '$test-color = red; body { color: $test-color; }' }
+    ])
 
-    before(function () {
-        temp.create({ 'custom-entry/my-entry.styl': '$test-color = red; body { color: $test-color; }' });
-    });
+    server = new Hapi.Server()
+    server.connection({ port: 8000 })
+    await server.register([ {
+      register: route,
+      options: { src: workspace.srcDir, entryPoint: 'my-entry' }
+    } ])
+  })
 
-    after(function () {
-        temp.cleanUp();
-        rimraf.sync(publicDir);
-    });
+  after(() => {
+    workspace.reset()
+    server.stop()
+  })
 
-    beforeEach(function (done) {
+  it('should compile from a configured entry point', async () => {
+    const response = await server.inject({ method: 'GET', url: '/css/custom-entry.css' })
+    expect(response.statusCode).to.be.equal(200)
+    expect(response.payload).to.be.equal('body{color:#f00}')
+  })
 
-        server = new Hapi.Server();
-        server.connection({ port: 8000 });
+  it('should write the output to a css file', async () => {
+    await server.inject({ method: 'GET', url: '/css/custom-entry.css' })
+    expect(workspace.fileContents('custom-entry.css')).to.be.equal('body{color:#f00}')
+  })
 
-        server.register([{ register: require('../src/route'), options: { src: temp.path, entryPoint: 'my-entry' } }], done);
-    });
-
-    it('should compile from a configured entry point', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/custom-entry.css' }, function (response) {
-            expect(response.statusCode).to.be.equal(200);
-            expect(response.payload).to.be.equal('body{color:#f00}');
-            done();
-        });
-
-    });
-
-    it('should write the output to a css file', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/custom-entry.css' }, function () {
-            expect(cssFile('custom-entry.css')).to.be.equal('body{color:#f00}');
-            done();
-        });
-
-    });
-
-    it('should return a 404 if file not found', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/unknown.css' }, function (response) {
-            expect(response.statusCode).to.be.equal(404);
-            done();
-        });
-
-    });
-
-});
+  it('should return a 404 if file not found', async () => {
+    const {statusCode} = await server.inject({ method: 'GET', url: '/css/unknown.css' })
+    expect(statusCode).to.be.equal(404)
+  })
+})

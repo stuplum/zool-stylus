@@ -1,72 +1,51 @@
-'use strict';
+'use strict'
 
-const Hapi = require('hapi');
+const {expect, Workspace} = require('./support')
+const Hapi = require('hapi')
+const route = require('../src/route')
 
-describe('zool-stylus: default settings', function () {
+describe('zool-stylus: default settings', () => {
+  const workspace = Workspace.create('zool-stylus-route', '/public/css')
+  let server
 
-    const temp = new Temp('zool-stylus-route');
+  before(async () => {
+    workspace.addSrcFiles([
+      { name: 'compile-me/index.styl', content: '$test-color = blue; body { color: $test-color; }' },
+      { name: 'no-compile/index.styl', content: 'body { == color: @background-color; }' }
+    ])
 
-    let server;
+    server = new Hapi.Server()
+    server.connection({ port: 8000 })
+    await server.register([ { register: route, options: { src: workspace.srcDir } } ])
+  })
 
-    before(function () {
-        temp.create({
-            'compile-me/index.styl': '$test-color = blue; body { color: $test-color; }',
-            'no-compile/index.styl': 'body { == color: @background-color; }'
-            // 'no-compile/index.styl': '$wrong-color: black; body { color: $wrong-color; }'
-        });
-    });
+  after(() => {
+    workspace.reset()
+    server.stop()
+  })
 
-    after(function () {
-        temp.cleanUp();
-        rimraf.sync(publicDir);
-    });
+  it('should compile a stylus file', async () => {
+    const response = await server.inject({ method: 'GET', url: '/css/compile-me.css' })
 
-    beforeEach(function (done) {
+    expect(response.headers[ 'content-type' ]).to.be.equal('text/css; charset=utf-8')
+    expect(response.statusCode).to.be.equal(200)
+    expect(response.payload).to.be.equal('body{color:#00f}')
+  })
 
-        server = new Hapi.Server();
-        server.connection({ port: 8000 });
+  it('should write the output to a css file', async () => {
+    await server.inject({ method: 'GET', url: '/css/compile-me.css' })
+    expect(workspace.fileContents('compile-me.css')).to.be.equal('body{color:#00f}')
+  })
 
-        server.register([{ register: require('../src/route'), options: { src: temp.path } }], done);
-    });
+  it('should return a 404 if file not found', async () => {
+    const response = await server.inject({ method: 'GET', url: '/css/unknown.css' })
+    expect(response.statusCode).to.be.equal(404)
+    expect(response.payload).to.be.equal('Not Found: /css/unknown.css')
+  })
 
-    it('should compile a stylus file', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/compile-me.css' }, function (response) {
-            expect(response.headers['content-type']).to.be.equal('text/css; charset=utf-8');
-            expect(response.statusCode).to.be.equal(200);
-            expect(response.payload).to.be.equal('body{color:#00f}');
-            done();
-        });
-
-    });
-
-    it('should write the output to a css file', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/compile-me.css' }, function () {
-            expect(cssFile('compile-me.css')).to.be.equal('body{color:#00f}');
-            done();
-        });
-
-    });
-
-    it('should return a 404 if file not found', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/unknown.css' }, function (response) {
-            expect(response.statusCode).to.be.equal(404);
-            expect(response.payload).to.be.equal('Not Found: /css/unknown.css');
-            done();
-        });
-
-    });
-
-    it('should return a 500 if file won\'t compile', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/no-compile.css' }, function (response) {
-            expect(response.statusCode).to.be.equal(500);
-            expect(response.payload).to.include('missing left-hand operand');
-            done();
-        });
-
-    });
-
-});
+  it('should return a 500 if file won\'t compile', async () => {
+    const response = await server.inject({ method: 'GET', url: '/css/no-compile.css' })
+    expect(response.statusCode).to.be.equal(500)
+    expect(response.payload).to.include('missing left-hand operand')
+  })
+})

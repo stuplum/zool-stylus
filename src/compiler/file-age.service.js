@@ -4,7 +4,6 @@ const fs = require('fs');
 const Promise = require('bluebird');
 const stat = Promise.promisify(fs.stat);
 
-const CompilationError = require('../errors/compilation.error');
 const DestNotFoundError = require('../errors/dest-not-found.error');
 const SrcNotFoundError = require('../errors/src-not-found.error');
 
@@ -25,11 +24,8 @@ module.exports = function (src, dest) {
       if (err.code === 'ENOENT' && err.path === src) {
         throw new SrcNotFoundError(err.message);
       }
-
       if (err.code === 'ENOENT' && err.path === dest) {
         throw new DestNotFoundError(err.message);
       }
-
-      throw new CompilationError(err.message);
     })
 }

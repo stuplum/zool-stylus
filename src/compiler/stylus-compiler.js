@@ -10,9 +10,10 @@ const render = Promise.promisify(require('stylus').render)
 const mkdirp = Promise.promisifyAll(require('mkdirp')).mkdirpAsync;
 const readFile = Promise.promisify(fs.readFile);
 const writeFile = Promise.promisify(fs.writeFile);
+const CompilationError = require('../errors/compilation.error');
 
 const zoolLogger = require('zool-utils').ZoolLogger;
-const logger = zoolLogger('zool-sass');
+const logger = zoolLogger('zool-stylus');
 
 const defaults = {
   force: false,
@@ -34,7 +35,6 @@ function toStylusConfig (config) {
 module.exports = {
 
   compileStylus: function (_config) {
-
     const config = Hoek.applyToDefaults(defaults, toStylusConfig(_config));
 
     if (config.debug) {
@@ -42,11 +42,8 @@ module.exports = {
     }
 
     return readFile(config.srcPath, 'utf-8')
-
       .then(function (content) {
-
         return render(content, config)
-
           .then(function (result) {
 
             if (config.debug) {
@@ -73,8 +70,9 @@ module.exports = {
                   });
               });
           })
+          .catch(function (err) {
+            throw new CompilationError(err.message);
+          })
       });
-
   }
-
 };

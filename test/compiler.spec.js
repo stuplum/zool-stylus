@@ -1,183 +1,97 @@
-'use strict';
-
-const mkdirp = require('mkdirp').sync;
-const writeFile = require('fs').writeFileSync;
-
-describe('zool-stylus: compiler', function () {
-
-  const temp = new Temp('zool-stylus-compiler');
-  const compiler = require('../src/compiler');
-
-  after(function () {
-    temp.cleanUp();
-    rimraf.sync(publicDir);
-  });
-
-  describe('with existing css', function () {
-
-    before(function (done) {
-
-      mkdirp(`${publicDir}/old`, 0x1c0);
-      writeFile(`${publicDir}/old/css.css`, 'body { color: brown; }', 'utf8');
-
-      setTimeout(function () {
-
-        temp.create({
-          'new/css/index.styl': 'body { color: yellow; }',
-          'old/css/index.styl': 'body { color: green; }'
-        });
-
-        done();
-
-      }, 1000);
-
-    });
-
-    it('should read css from existing css file when css file is newer than stylus file', function (done) {
-
-      // Given:
-      mkdirp(`${publicDir}/new`, 0x1c0);
-      writeFile(`${publicDir}/new/css.css`, 'body { color: pink; }', 'utf8');
-
-      // Then:
-      compiler
-
-        .compile('new/css', { src: temp.path })
-
-        .then(function (css) {
-          expect(css).to.be.equal('body { color: pink; }');
-          done();
-        })
-
-        .catch(done);
-
-    });
-
-    it('should compile from stylus when css file is newer but force option is set to true', function (done) {
-
-      // Given:
-      mkdirp(`${publicDir}/new`, 0x1c0);
-      writeFile(`${publicDir}/new/css.css`, 'body { color: purple; }', 'utf8');
-
-      // Then:
-      compiler
-
-        .compile('new/css', { src: temp.path, force: true })
-
-        .then(function (css) {
-          expect(css).to.be.equal('body{color:#ff0}');
-          done();
-        })
-
-        .catch(done);
-
-    });
-
-    it('should compile stylus when css file is older than styl file', function (done) {
-
-      compiler
-
-        .compile('old/css', { src: temp.path })
-
-        .then(function (css) {
-          expect(css).to.be.equal('body{color:#008000}');
-          done();
-        })
-
-        .catch(done);
-
-    });
-
-  });
-
-  describe('with no existing css', function () {
-
-    before(function () {
-      temp.create({
-        'compile-me/index.styl': '$test-color = blue; body { color: $test-color; }',
-        'compile-me-too/index.styl': '$test-color = red; body { color: $test-color; }',
-        'compile-me-also/index.styl': '$test-color = green; body { color: $test-color; }',
-        'no-compile/index.styl': '$test-color = ; body { color: $test-color; }'
-      });
-    });
-
-    it('should compile a stylus file and return css', function (done) {
-
-      compiler
-
-        .compile('compile-me', { src: temp.path })
-
-        .then(function (css) {
-          expect(css).to.be.equal('body{color:#00f}');
-          done();
-        })
-
-        .catch(done);
-
-    });
-
-    it('should compile a stylus file and save to css file in default location', function (done) {
-
-      compiler
-
-        .compile('compile-me-too', { src: temp.path })
-
-        .then(function () {
-          expect(cssFile('compile-me-too.css')).to.be.equal('body{color:#f00}');
-          done();
-        })
-
-        .catch(done);
-
-    });
-
-    it('should return same value as saved to compiled css file', function (done) {
-
-      compiler
-
-        .compile('compile-me-also', { src: temp.path })
-
-        .then(function (css) {
-          expect(cssFile('compile-me-also.css')).to.be.equal(css);
-          done();
-        })
-
-        .catch(done);
-
-    });
-
-    it('should throw error if stylus file is not found', function (done) {
-
-      compiler
-
-        .compile('unknown')
-
-        .then(function (err) {
-          done(new Error('Should not have found a stylus file'));
-        })
-
-        .catch(function (err) {
-          expect(err.code).to.be.equal('ENOENT');
-          done();
-        });
-
-    });
-
-    it('should throw an error if stylus file won\'t compile', function (done) {
-
-      compiler
-
-        .compile('no-compile', { src: temp.path })
-
-        .then(function () {
-          done(new Error('Should not have compiled the stylus file'));
-        })
-
-        .catch(function (err) {
-          expect(err.name).to.equal('ParseError');
-          expect(err.message).to.contain('invalid right-hand side operand in assignment, got ";"');
-          done();
-        });
-    });
-  });
-});
+'use strict'
+
+const {expect, thrown, Workspace} = require('./support')
+
+const CompilationError = require('../src/errors/compilation.error')
+const SrcNotFoundError = require('../src/errors/src-not-found.error')
+
+const compiler = require('../src/compiler')
+
+describe('zool-stylus: compiler', () => {
+  const workspace = Workspace.create('zool-stylus-compiler', '/public/css')
+
+  after(() => {
+    workspace.reset()
+  })
+
+  describe('with existing css', () => {
+    before((done) => {
+      workspace.addOutputFiles([
+        { name: '/old/css.css', content: 'body { color: brown; }' }
+      ])
+
+      setTimeout(() => {
+        workspace.addSrcFiles([
+          { name: 'new/css/index.styl', content: 'body { color: yellow; }' },
+          { name: 'old/css/index.styl', content: 'body { color: green; }' }
+        ])
+        done()
+      }, 1000)
+    })
+
+    it('should read css from existing css file when css file is newer than stylus file', async () => {
+      workspace.addOutputFiles([
+        { name: '/new/css.css', content: 'body { color: pink; }' }
+      ])
+
+      expect(
+        await compiler.compile('new/css', { src: workspace.srcDir })
+      ).to.be.equal('body { color: pink; }')
+    })
+
+    it('should compile from stylus when css file is newer but force option is set to true', async () => {
+      workspace.addOutputFiles([
+        { name: '/new/css.css', content: 'body { color: purple; }' }
+      ])
+
+      expect(
+        await compiler.compile('new/css', { src: workspace.srcDir, force: true })
+      ).to.be.equal('body{color:#ff0}')
+    })
+
+    it('should compile stylus when css file is older than styl file', async () => {
+      expect(
+        await compiler.compile('old/css', { src: workspace.srcDir })
+      ).to.be.equal('body{color:#008000}')
+    })
+  })
+
+  describe('with no existing css', () => {
+    before(() => {
+      workspace.addSrcFiles([
+        { name: 'compile-me/index.styl', content: '$test-color = blue; body { color: $test-color; }' },
+        { name: 'compile-me-too/index.styl', content: '$test-color = red; body { color: $test-color; }' },
+        { name: 'compile-me-also/index.styl', content: '$test-color = green; body { color: $test-color; }' },
+        { name: 'no-compile/index.styl', content: '$test-color = ; body { color: $test-color; }' }
+      ])
+    })
+
+    it('should compile a stylus file and return css', async () => {
+      expect(
+        await compiler.compile('compile-me', { src: workspace.srcDir })
+      ).to.be.equal('body{color:#00f}')
+    })
+
+    it('should compile a stylus file and save to css file in default location', async () => {
+      await compiler.compile('compile-me-too', { src: workspace.srcDir })
+      expect(workspace.fileContents('compile-me-too.css')).to.be.equal('body{color:#f00}')
+    })
+
+    it('should return same value as saved to compiled css file', async () => {
+      const css = await compiler.compile('compile-me-also', { src: workspace.srcDir })
+      expect(workspace.fileContents('compile-me-also.css')).to.be.equal(css)
+    })
+
+    it('should throw error if stylus file is not found', async () => {
+      expect(await thrown(() =>
+        compiler.compile('unknown')
+      )).to.equal(SrcNotFoundError)
+    })
+
+    it('should throw an error if stylus file won\'t compile: thrown()', async () => {
+      expect(await thrown(() =>
+        compiler.compile('no-compile', { src: workspace.srcDir })
+      )).to.equal(CompilationError)
+    })
+  })
+})

@@ -1,39 +1,33 @@
-'use strict';
+'use strict'
 
-const Hapi = require('hapi');
+const {expect, Workspace} = require('./support')
+const Hapi = require('hapi')
 
-describe('zool-stylus: route', function () {
+const route = require('../')
 
-    const temp = new Temp('zool-stylus-route');
+describe('zool-stylus: route', () => {
+  const workspace = Workspace.create('zool-stylus-route', '/public/css')
+  let server
 
-    let server;
+  before(async () => {
+    workspace.addSrcFiles([
+      { name: 'not-important/index.styl', content: 'body {}' }
+    ])
 
-    before(function () {
-        temp.create({
-            'not-important/index.styl': 'body {}'
-        });
-    });
+    server = new Hapi.Server()
+    server.connection({ port: 8000 })
+    await server.register([{
+      register: route,
+      options: { src: workspace.srcDir }
+    }])
+  })
 
-    after(function () {
-        temp.cleanUp();
-        rimraf.sync(publicDir);
-    });
+  after(() => {
+    workspace.reset()
+  })
 
-    beforeEach(function (done) {
-
-        server = new Hapi.Server();
-        server.connection({ port: 8000 });
-
-        server.register([{ register: require('../'), options: { src: temp.path } }], done);
-    });
-
-    it('should be exported', function (done) {
-
-        server.inject({ method: 'GET', url: '/css/not-important.css' }, function (response) {
-            expect(response.statusCode).to.be.equal(200);
-            done();
-        });
-
-    });
-
-});
+  it('should be exported', async () => {
+    const {statusCode} = await server.inject({ method: 'GET', url: '/css/not-important.css' })
+    expect(statusCode).to.be.equal(200)
+  })
+})
