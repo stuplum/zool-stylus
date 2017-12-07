@@ -5,7 +5,7 @@ const Hapi = require('hapi')
 const route = require('../src/route')
 
 describe('zool-stylus: default settings', () => {
-  const workspace = Workspace.create('zool-stylus-route', '/public/css')
+  const workspace = Workspace.create('zool-stylus-route')
   let server
 
   before(async () => {
@@ -16,7 +16,7 @@ describe('zool-stylus: default settings', () => {
 
     server = new Hapi.Server()
     server.connection({ port: 8000 })
-    await server.register([ { register: route, options: { src: workspace.srcDir } } ])
+    await server.register([ { register: route, options: { src: workspace.srcDir, dest: workspace.outputDir } } ])
   })
 
   after(() => {
