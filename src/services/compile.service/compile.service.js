@@ -1,6 +1,5 @@
 'use strict';
 
-const Boom = require('boom');
 const Hoek = require('hoek');
 
 const join = require('path').join;
@@ -10,10 +9,10 @@ const fs = require('fs');
 const Promise = require('bluebird');
 const readFile = Promise.promisify(fs.readFile);
 
-const fileAge = require('./file-age.service')
-const compile = require('./stylus-compiler').compileStylus;
+const fileAge = require('../file-age.service')
+const compile = require('../stylus.service').compileStylus;
 
-const DestNotFoundError = require('../errors/dest-not-found.error')
+const DestNotFoundError = require('../../errors/dest-not-found.error')
 
 const zoolLogger = require('zool-utils').ZoolLogger;
 const logger = zoolLogger('zool-stylus');
@@ -47,7 +46,7 @@ module.exports = {
     compileConfig.destinationPath = destinationPath;
     compileConfig.srcPath = srcPath;
 
-    return fileAge(srcPath, destinationPath)
+    return fileAge({ src: srcPath, dest: destinationPath })
       .then(function (age) {
         if (age.srcIsNewer || compileConfig.force) {
           if (compileConfig.debug) {

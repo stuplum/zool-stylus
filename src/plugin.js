@@ -3,7 +3,7 @@
 const Hoek = require('hoek')
 const Inert = require('inert')
 
-const compile = require('./compiler').compile
+const compile = require('./services/compile.service').compile
 const route = require('./routes/stylus.route')
 
 const defaults = {

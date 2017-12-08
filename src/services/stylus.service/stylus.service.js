@@ -10,7 +10,7 @@ const render = Promise.promisify(require('stylus').render)
 const mkdirp = Promise.promisifyAll(require('mkdirp')).mkdirpAsync;
 const readFile = Promise.promisify(fs.readFile);
 const writeFile = Promise.promisify(fs.writeFile);
-const CompilationError = require('../errors/compilation.error');
+const CompilationError = require('../../errors/compilation.error');
 
 const zoolLogger = require('zool-utils').ZoolLogger;
 const logger = zoolLogger('zool-stylus');

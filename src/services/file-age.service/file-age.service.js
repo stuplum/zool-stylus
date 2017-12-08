@@ -4,17 +4,15 @@ const fs = require('fs');
 const Promise = require('bluebird');
 const stat = Promise.promisify(fs.stat);
 
-const DestNotFoundError = require('../errors/dest-not-found.error');
-const SrcNotFoundError = require('../errors/src-not-found.error');
+const DestNotFoundError = require('../../errors/dest-not-found.error');
+const SrcNotFoundError = require('../../errors/src-not-found.error');
 
-module.exports = function (src, dest) {
+module.exports = function ({src, dest}) {
   return stat(src)
     .then(function (srcStats) {
       return stat(dest)
         .then(function (destinationStats) {
             return {
-              src: srcStats.mtime,
-              dest: destinationStats.mtime,
               srcIsNewer: srcStats.mtime > destinationStats.mtime,
               destIsNewer: destinationStats.mtime > srcStats.mtime
             }

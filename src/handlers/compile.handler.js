@@ -1,14 +1,11 @@
 'use strict'
 
-const PLUGIN_NAME = require('../../package.json').name
-
-const zoolUtils = require('zool-utils')
-const zoolLogger = zoolUtils.ZoolLogger
-const logger = zoolLogger(PLUGIN_NAME)
+const {ZoolLogger} = require('zool-utils')
+const logger = ZoolLogger(require('../../package.json').name)
 
 const SrcNotFoundError = require('../errors/src-not-found.error')
 
-const {compile} = require('../compiler')
+const {compile} = require('../services/compile.service')
 
 exports.compile = function (routeConfig) {
   return function (request, reply) {
