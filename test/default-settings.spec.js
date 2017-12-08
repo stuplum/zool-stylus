@@ -2,7 +2,7 @@
 
 const {expect, Workspace} = require('./support')
 const Hapi = require('hapi')
-const route = require('../src/route')
+const plugin = require('../src/plugin')
 
 describe('zool-stylus: default settings', () => {
   const workspace = Workspace.create('zool-stylus-route')
@@ -16,7 +16,7 @@ describe('zool-stylus: default settings', () => {
 
     server = new Hapi.Server()
     server.connection({ port: 8000 })
-    await server.register([ { register: route, options: { src: workspace.srcDir, dest: workspace.outputDir } } ])
+    await server.register([ { register: plugin, options: { src: workspace.srcDir, dest: workspace.outputDir } } ])
   })
 
   after(() => {
