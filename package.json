@@ -46,6 +46,7 @@
   "devDependencies": {
     "chai": "^3.2.0",
     "commander": "^2.9.0",
+    "get-installed-path": "4.0.8",
     "glob": "^6.0.4",
     "mocha": "^4.0.1",
     "rimraf": "2.5.1",

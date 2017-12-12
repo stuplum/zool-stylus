@@ -2,9 +2,9 @@
 
 const {expect, Workspace} = require('./support')
 const Hapi = require('hapi')
-const plugin = require('../src/plugin')
+const plugin = require('../')
 
-describe('zool-stylus: default settings', () => {
+describe('zool-stylus: integration', () => {
   const workspace = Workspace.create('zool-stylus-route')
   let server
 

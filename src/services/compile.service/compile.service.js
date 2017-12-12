@@ -1,67 +1,78 @@
-'use strict';
+'use strict'
 
-const Hoek = require('hoek');
+const Hoek = require('hoek')
 
-const join = require('path').join;
-const resolve = require('path').resolve;
+const dirname = require('path').dirname
+const join = require('path').join
+const resolve = require('path').resolve
 
-const fs = require('fs');
-const Promise = require('bluebird');
-const readFile = Promise.promisify(fs.readFile);
+const fs = require('fs')
+const Promise = require('bluebird')
+const mkdirp = Promise.promisifyAll(require('mkdirp')).mkdirpAsync
+const readFile = Promise.promisify(fs.readFile)
+const writeFile = Promise.promisify(fs.writeFile)
 
 const fileAge = require('../file-age.service')
-const compile = require('../stylus.service').compileStylus;
+const compile = require('../stylus.service').compileStylus
 
 const DestNotFoundError = require('../../errors/dest-not-found.error')
 
-const zoolLogger = require('zool-utils').ZoolLogger;
-const logger = zoolLogger('zool-stylus');
+function compileAndWriteResult (config, destination) {
+  return compile(config)
+    .then(function (result) {
+      return mkdirp(dirname(destination), 0x1c0)
+        .then(function () {
+          return writeFile(destination, result, 'utf8')
+            .then(function () {
+              return result.toString()
+            })
+        })
+    })
+}
 
-const defaults = {
-  entryPoint: 'index',
-  extension: 'styl',
-  src: './lib/styl',
-  dest: './public/css'
-};
+function applyDefaults (options) {
+  const defaults = {
+    entryPoint: 'index',
+    extension: 'styl',
+    src: './lib/styl',
+    dest: './public/css'
+  }
+
+  options = Hoek.applyToDefaults(defaults, options || {})
+
+  if (!options.paths) {
+    options.paths = [options.src]
+  }
+
+  return options
+}
+
+function removeFileExtension (componentName) {
+  return componentName.replace('.css', '')
+}
 
 module.exports = {
 
-  compile: function (componentName, compileConfig) {
+  compile: function (componentName, options) {
+    options = applyDefaults(options)
 
-    compileConfig = compileConfig || {};
+    const componentPath = `${options.src}/${removeFileExtension(componentName)}`
+    const destinationPath = resolve(join(options.dest, componentName))
+    const srcPath = resolve(`${componentPath}/${options.entryPoint}.${options.extension}`)
 
-    const paths = compileConfig.paths;
-
-    compileConfig = Hoek.applyToDefaults(defaults, compileConfig);
-
-    if (!paths) {
-      compileConfig.paths = [compileConfig.src];
-    }
-
-    const componentPath = `${compileConfig.src}/${componentName}`;
-    const destinationPath = resolve(join(compileConfig.dest, componentName + '.css'));
-    const srcPath = resolve(`${componentPath}/${compileConfig.entryPoint}.${compileConfig.extension}`);
-
-    compileConfig.componentPath = componentPath;
-    compileConfig.destinationPath = destinationPath;
-    compileConfig.srcPath = srcPath;
+    options.componentPath = componentPath
+    options.srcPath = srcPath
 
     return fileAge({ src: srcPath, dest: destinationPath })
       .then(function (age) {
-        if (age.srcIsNewer || compileConfig.force) {
-          if (compileConfig.debug) {
-            logger.debug(compileConfig.force ? 'Forcing compilation' : 'Compiled css out of date:', destinationPath);
-          }
-          return compile(compileConfig);
+        if (age.srcIsNewer || options.force) {
+          return compileAndWriteResult(options, destinationPath)
         } else {
-          return readFile(destinationPath, 'utf-8');
+          return readFile(destinationPath, 'utf-8')
         }
       })
-      .catch(DestNotFoundError, function (err) {
-        if (compileConfig.debug) {
-          logger.debug('Compiled css not found:', err);
-        }
-        return compile(compileConfig);
+      .catch(DestNotFoundError, function () {
+        return compileAndWriteResult(options, destinationPath)
       })
   }
-};
+}

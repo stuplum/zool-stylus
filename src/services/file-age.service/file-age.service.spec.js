@@ -5,7 +5,7 @@ const {expect, thrown, Workspace} = require('../../../test/support')
 const DestNotFoundError = require('../../errors/dest-not-found.error')
 const SrcNotFoundError = require('../../errors/src-not-found.error')
 
-const fileAge = require('./file-age.service')
+const fileAge = require('.')
 
 describe('file-age.service', () => {
   const workspace = Workspace.create('zool-stylus-file-age')

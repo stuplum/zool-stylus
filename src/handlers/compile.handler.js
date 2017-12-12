@@ -7,11 +7,9 @@ const SrcNotFoundError = require('../errors/src-not-found.error')
 
 const {compile} = require('../services/compile.service')
 
-exports.compile = function (routeConfig) {
+exports.compile = function (options) {
   return function (request, reply) {
-    const componentName = request.params.module.replace('.css', '')
-
-    compile(componentName, routeConfig)
+    compile(request.params.module, options)
       .then((css) => {
         reply(css).type('text/css')
       })

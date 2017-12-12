@@ -57,6 +57,7 @@ server.register({
 * `entryPoint`: Defaults to `index`
 * `extension`: Defaults to `styl`
 * `force`: Always re-compile. Defaults to `false`
+* `cache`: This determines if the stylus parser will cache internally. Defaults to `false`
 * `compress`: Whether the output .css files should be compressed. Defaults to `true`
 * `firebug`: Emits debug infos in the generated css that can be used by the FireStylus Firebug plugin. Defaults to `false`
 * `linenos`: Emits comments in the generated css indicating the corresponding stylus line. Defaults to `false`
