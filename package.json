@@ -1,6 +1,6 @@
 {
   "name": "zool-stylus",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Hapi.js plugin for compiling and serving Stylus stylesheets",
   "main": "index.js",
   "scripts": {
