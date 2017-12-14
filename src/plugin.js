@@ -4,7 +4,7 @@ const Hoek = require('hoek')
 const Inert = require('inert')
 
 const compile = require('./services/compile.service').compile
-const route = require('./routes/stylus.route')
+const route = require('./routes/compile.route')
 
 const defaults = {
   debug: false,
