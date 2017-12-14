@@ -43,5 +43,11 @@ module.exports = {
             throw new CompilationError(err.message)
           })
       })
+  },
+
+  extractResult: function (cb) {
+    return function (result) {
+      return cb(result.toString())
+    }
   }
 }

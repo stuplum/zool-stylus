@@ -13,21 +13,24 @@ const readFile = Promise.promisify(fs.readFile)
 const writeFile = Promise.promisify(fs.writeFile)
 
 const fileAge = require('../file-age.service')
-const compile = require('../stylus.service').compileStylus
+const {
+  compileStylus: compile,
+  extractResult
+} = require('../stylus.service')
 
 const DestNotFoundError = require('../../errors/dest-not-found.error')
 
 function compileAndWriteResult (config, destination) {
   return compile(config)
-    .then(function (result) {
+    .then(extractResult(function (css) {
       return mkdirp(dirname(destination), 0x1c0)
         .then(function () {
-          return writeFile(destination, result, 'utf8')
+          return writeFile(destination, css, 'utf8')
             .then(function () {
-              return result.toString()
+              return css
             })
         })
-    })
+    }))
 }
 
 function applyDefaults (options) {
