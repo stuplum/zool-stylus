@@ -12,13 +12,13 @@ const mkdirp = Promise.promisifyAll(require('mkdirp')).mkdirpAsync
 const readFile = Promise.promisify(fs.readFile)
 const writeFile = Promise.promisify(fs.writeFile)
 
-const fileAge = require('../file-age.service')
+const {fileAge} = require('zool-utils')
 const {
   compileStylus: compile,
   extractResult
 } = require('../stylus.service')
 
-const DestNotFoundError = require('../../errors/dest-not-found.error')
+const {DestNotFoundError} = require('zool-utils').errors
 
 function compileAndWriteResult (config, destination) {
   return compile(config)

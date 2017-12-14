@@ -3,7 +3,7 @@
 const {expect, thrown, Workspace} = require('../../../test/support')
 const {getInstalledPath} = require('get-installed-path')
 
-const CompilationError = require('../../errors/compilation.error')
+const {CompilationError} = require('zool-utils').errors
 
 const stylus = require('.')
 

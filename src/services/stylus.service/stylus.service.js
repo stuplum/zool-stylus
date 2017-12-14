@@ -8,7 +8,7 @@ const dirname = require('path').dirname
 
 const render = Promise.promisify(require('stylus').render)
 const readFile = Promise.promisify(fs.readFile)
-const CompilationError = require('../../errors/compilation.error')
+const {CompilationError} = require('zool-utils').errors
 
 function toStylusOption (option) {
   const srcDir = dirname(option.srcPath)

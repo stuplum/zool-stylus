@@ -2,8 +2,8 @@
 
 const {expect, thrown, Workspace} = require('../../../test/support')
 
-const CompilationError = require('../../errors/compilation.error')
-const SrcNotFoundError = require('../../errors/src-not-found.error')
+const {CompilationError} = require('zool-utils').errors
+const {SrcNotFoundError} = require('zool-utils').errors
 
 const compile = require('.')
 

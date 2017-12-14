@@ -3,7 +3,7 @@
 const {ZoolLogger} = require('zool-utils')
 const logger = ZoolLogger(require('../../package.json').name)
 
-const SrcNotFoundError = require('../errors/src-not-found.error')
+const {SrcNotFoundError} = require('zool-utils').errors
 
 const {compile} = require('../services/compile.service')
 
