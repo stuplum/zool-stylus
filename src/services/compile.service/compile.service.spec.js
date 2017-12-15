@@ -5,7 +5,7 @@ const {expect, thrown, Workspace} = require('../../../test/support')
 const {CompilationError} = require('zool-utils').errors
 const {SrcNotFoundError} = require('zool-utils').errors
 
-const compile = require('.')
+const {compile} = require('.')
 
 describe('compile.service', () => {
   const workspace = Workspace.create('zool-stylus-compile')
@@ -15,13 +15,13 @@ describe('compile.service', () => {
   })
 
   describe('entryPoint', () => {
-    it('should read css from existing css file when css file is newer than stylus file', async () => {
+    it('should change entry point file name', async () => {
       workspace.addSrcFiles([
         { name: 'style/custom-entry/custom-index.styl', content: 'body { color: yellow; }' }
       ])
 
       expect(
-        await compile.compile('style/custom-entry.css', { entryPoint: 'custom-index', src: workspace.srcDir, dest: workspace.outputDir })
+        await compile('style/custom-entry.css', { entryPoint: 'custom-index', src: workspace.srcDir, dest: workspace.outputDir })
       ).to.be.equal('body{color:#ff0}')
     })
   })
@@ -47,7 +47,7 @@ describe('compile.service', () => {
       ])
 
       expect(
-        await compile.compile('new/css.css', { src: workspace.srcDir, dest: workspace.outputDir })
+        await compile('new/css.css', { src: workspace.srcDir, dest: workspace.outputDir })
       ).to.be.equal('body { color: pink; }')
     })
 
@@ -57,13 +57,13 @@ describe('compile.service', () => {
       ])
 
       expect(
-        await compile.compile('new/css.css', { src: workspace.srcDir, dest: workspace.outputDir, force: true })
+        await compile('new/css.css', { src: workspace.srcDir, dest: workspace.outputDir, force: true })
       ).to.be.equal('body{color:#ff0}')
     })
 
     it('should compile stylus when css file is older than styl file', async () => {
       expect(
-        await compile.compile('old/css.css', { src: workspace.srcDir, dest: workspace.outputDir })
+        await compile('old/css.css', { src: workspace.srcDir, dest: workspace.outputDir })
       ).to.be.equal('body{color:#008000}')
     })
   })
@@ -80,29 +80,29 @@ describe('compile.service', () => {
 
     it('should compile a stylus file and return css', async () => {
       expect(
-        await compile.compile('compile-me.css', { src: workspace.srcDir, dest: workspace.outputDir })
+        await compile('compile-me.css', { src: workspace.srcDir, dest: workspace.outputDir })
       ).to.be.equal('body{color:#00f}')
     })
 
     it('should compile a stylus file and save to css file in default location', async () => {
-      await compile.compile('compile-me-too.css', { src: workspace.srcDir, dest: workspace.outputDir })
+      await compile('compile-me-too.css', { src: workspace.srcDir, dest: workspace.outputDir })
       expect(workspace.fileContents('compile-me-too.css')).to.be.equal('body{color:#f00}')
     })
 
     it('should return same value as saved to compiled css file', async () => {
-      const css = await compile.compile('compile-me-also.css', { src: workspace.srcDir, dest: workspace.outputDir })
+      const css = await compile('compile-me-also.css', { src: workspace.srcDir, dest: workspace.outputDir })
       expect(workspace.fileContents('compile-me-also.css')).to.be.equal(css)
     })
 
     it('should throw error if stylus file is not found', async () => {
       expect(await thrown(() =>
-        compile.compile('unknown')
+        compile('unknown.css', { src: workspace.srcDir, dest: workspace.outputDir })
       )).to.equal(SrcNotFoundError)
     })
 
     it('should throw an error if stylus file won\'t compile: thrown()', async () => {
       expect(await thrown(() =>
-        compile.compile('no-compile.css', { src: workspace.srcDir, dest: workspace.outputDir })
+        compile('no-compile.css', { src: workspace.srcDir, dest: workspace.outputDir })
       )).to.equal(CompilationError)
     })
   })
