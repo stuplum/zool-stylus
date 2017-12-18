@@ -13,16 +13,13 @@ const readFile = Promise.promisify(fs.readFile)
 const writeFile = Promise.promisify(fs.writeFile)
 
 const {fileAge} = require('zool-utils')
-const {
-  compileStylus: compile,
-  extractResult
-} = require('../stylus.service')
+const {compileStylus: compile} = require('../stylus.service')
 
 const {DestNotFoundError} = require('zool-utils').errors
 
 function compileAndWriteResult (config, destination) {
   return compile(config)
-    .then(extractResult(function (css) {
+    .then(function (css) {
       return mkdirp(dirname(destination), 0x1c0)
         .then(function () {
           return writeFile(destination, css, 'utf8')
@@ -30,7 +27,7 @@ function compileAndWriteResult (config, destination) {
               return css
             })
         })
-    }))
+    })
 }
 
 function applyDefaults (options) {
@@ -60,22 +57,22 @@ module.exports = {
     options = applyDefaults(options)
 
     const componentPath = `${options.src}/${removeFileExtension(componentName)}`
-    const destinationPath = resolve(join(options.dest, componentName))
+    const destPath = resolve(join(options.dest, componentName))
     const srcPath = resolve(`${componentPath}/${options.entryPoint}.${options.extension}`)
 
-    options.componentPath = componentPath
     options.srcPath = srcPath
+    options.destPath = destPath
 
-    return fileAge({ src: srcPath, dest: destinationPath })
+    return fileAge({ src: srcPath, dest: destPath })
       .then(function (age) {
         if (age.srcIsNewer || options.force) {
-          return compileAndWriteResult(options, destinationPath)
+          return compileAndWriteResult(options, destPath)
         } else {
-          return readFile(destinationPath, 'utf-8')
+          return readFile(destPath, 'utf-8')
         }
       })
       .catch(DestNotFoundError, function () {
-        return compileAndWriteResult(options, destinationPath)
+        return compileAndWriteResult(options, destPath)
       })
   }
 }

@@ -5,7 +5,7 @@ const {getInstalledPath} = require('get-installed-path')
 
 const {CompilationError} = require('zool-utils').errors
 
-const stylus = require('.')
+const {compileStylus} = require('.')
 
 describe('stylus.service', () => {
   const workspace = Workspace.create('zool-stylus-stylus')
@@ -22,18 +22,30 @@ describe('stylus.service', () => {
         ])
 
         expect(
-          await stylus.compileStylus({ srcPath: `${workspace.srcDir}/style/file.styl` })
+          await compileStylus({ srcPath: `${workspace.srcDir}/style/file.styl` })
         ).to.be.equal('body{color:#f00}')
       })
 
       it('should render stylus from directory', async () => {
         workspace.addSrcFiles([
-          { name: 'style/directory/index.styl', content: 'body { color: blue; }' }
+          { name: 'style/directory/index.styl', content: '@import "styles"' },
+          { name: 'style/directory/styles.styl', content: 'body { color: blue; }' }
         ])
 
         expect(
-          await stylus.compileStylus({ srcPath: `${workspace.srcDir}/style/directory/index.styl` })
+          await compileStylus({ srcPath: `${workspace.srcDir}/style/directory` })
         ).to.be.equal('body{color:#00f}')
+      })
+
+      it('should render stylus from directory with different entry point', async () => {
+        workspace.addSrcFiles([
+          { name: 'style/directory/custom-entry.styl', content: '@import "custom-styles"' },
+          { name: 'style/directory/custom-styles.styl', content: 'body { color: gold; }' }
+        ])
+
+        expect(
+          await compileStylus({ entryPoint: 'custom-entry', srcPath: `${workspace.srcDir}/style/directory` })
+        ).to.be.equal('body{color:#ffd700}')
       })
     })
 
@@ -44,7 +56,7 @@ describe('stylus.service', () => {
         ])
 
         expect(
-          await stylus.compileStylus({ compress: false, srcPath: `${workspace.srcDir}/style/no-compress.styl` })
+          await compileStylus({ compress: false, srcPath: `${workspace.srcDir}/style/no-compress.styl` })
         ).to.be.equal('body {\n  color: #008000;\n}\n')
       })
     })
@@ -56,7 +68,7 @@ describe('stylus.service', () => {
         ])
 
         expect(
-          await stylus.compileStylus({ firebug: true, srcPath: `${workspace.srcDir}/style/firebug.styl` })
+          await compileStylus({ firebug: true, srcPath: `${workspace.srcDir}/style/firebug.styl` })
         ).to.include('@media -stylus-debug-info')
       })
     })
@@ -78,32 +90,32 @@ describe('stylus.service', () => {
 body{color:#800080}`
 
         expect(
-          await stylus.compileStylus({ linenos: true, srcPath: `${workspace.srcDir}/style/linenos.styl` })
+          await compileStylus({ linenos: true, srcPath: `${workspace.srcDir}/style/linenos.styl` })
         ).to.be.equal(cssWithComments)
       })
     })
 
     describe('sourcemap', () => {
-      it('should output stylus line numbers in css', async () => {
+      it('should output sourcemap url in css', async () => {
         workspace.addSrcFiles([
           { name: 'style/sourcemap.styl', content: 'body { color: yellow; }' }
         ])
 
         expect(
-          await stylus.compileStylus({ sourcemap: true, srcPath: `${workspace.srcDir}/style/sourcemap.styl` })
+          await compileStylus({ sourcemap: true, srcPath: `${workspace.srcDir}/style/sourcemap.styl` })
         ).to.include('sourceMappingURL=')
       })
     })
   })
 
   describe('with invalid stylus', () => {
-    it('should throw error if stylus file is not found', async () => {
+    it('should throw error if stylus file will not compile', async () => {
       workspace.addSrcFiles([
         { name: 'style/no-compile/index.styl', content: '$test-color = ; body { color: $test-color; }' }
       ])
 
       expect(await thrown(() =>
-        stylus.compileStylus({ srcPath: `${workspace.srcDir}/style/no-compile/index.styl` })
+        compileStylus({ srcPath: `${workspace.srcDir}/style/no-compile/index.styl` })
       )).to.equal(CompilationError)
     })
   })
